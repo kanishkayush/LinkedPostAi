@@ -47,7 +47,8 @@ export function useLinkedIn() {
   const isConnected = auth && auth.accessToken && Date.now() < auth.expiresAt;
 
   const connect = useCallback(() => {
-    window.location.href = '/auth/linkedin';
+    const apiBase = import.meta.env.VITE_API_URL || '';
+    window.location.href = `${apiBase}/auth/linkedin`;
   }, []);
 
   const disconnect = useCallback(() => {
