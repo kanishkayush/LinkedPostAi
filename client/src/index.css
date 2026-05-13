@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-linkedin-bg font-sans text-linkedin-text;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-linkedin-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-linkedin-text-secondary;
+  }
+}
+
+@layer components {
+  .chip {
+    @apply px-4 py-2 rounded-full text-sm font-medium cursor-pointer 
+           border-2 border-linkedin-border bg-white text-linkedin-text-secondary
+           transition-all duration-200 ease-out select-none
+           hover:border-linkedin-blue hover:text-linkedin-blue hover:bg-blue-50
+           hover:shadow-sm hover:-translate-y-0.5;
+  }
+
+  .chip-active {
+    @apply border-linkedin-blue bg-linkedin-blue text-white shadow-md
+           hover:bg-linkedin-blue-dark hover:border-linkedin-blue-dark hover:text-white;
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 bg-linkedin-blue text-white font-semibold rounded-full
+           transition-all duration-200 ease-out
+           hover:bg-linkedin-blue-dark hover:shadow-lg hover:-translate-y-0.5
+           active:translate-y-0 active:shadow-md
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-white text-linkedin-blue font-medium rounded-full border-2 border-linkedin-blue
+           transition-all duration-200 ease-out
+           hover:bg-linkedin-blue hover:text-white hover:shadow-md hover:-translate-y-0.5
+           active:translate-y-0;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 text-linkedin-text-secondary font-medium rounded-lg
+           transition-all duration-200 ease-out
+           hover:bg-gray-100 hover:text-linkedin-text
+           active:bg-gray-200;
+  }
+
+  .card {
+    @apply bg-white rounded-xl border border-linkedin-border shadow-sm
+           transition-shadow duration-300
+           hover:shadow-md;
+  }
+
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+
+  .section-title {
+    @apply text-xs font-semibold uppercase tracking-wider text-linkedin-text-secondary mb-3;
+  }
+
+  .linkedin-post-card {
+    @apply bg-white rounded-xl border border-linkedin-border shadow-sm overflow-hidden;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg, #f3f2ef 25%, #e8e7e3 50%, #f3f2ef 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-linkedin-blue to-linkedin-blue-light;
+  }
+}
