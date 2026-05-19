@@ -115,13 +115,23 @@ async function downloadImage(imageUrl) {
 /**
  * Post content to LinkedIn (text only or with image)
  */
-async function postToLinkedIn(accessToken, userId, postText, imageUrl) {
-  // If there's an image URL, upload it to LinkedIn first
+async function postToLinkedIn(accessToken, userId, postText, imagePayload) {
+  // If there's an image, upload it to LinkedIn first
   let mediaAsset = null;
-  if (imageUrl) {
+  if (imagePayload && imagePayload.data) {
     try {
-      console.log("Downloading image from:", imageUrl);
-      const imageBuffer = await downloadImage(imageUrl);
+      let imageBuffer;
+
+      if (imagePayload.type === "base64") {
+        // User uploaded image — strip the data:image/...;base64, prefix
+        const base64Data = imagePayload.data.replace(/^data:image\/\w+;base64,/, "");
+        imageBuffer = Buffer.from(base64Data, "base64");
+        console.log("Using uploaded image, size:", imageBuffer.length);
+      } else {
+        // AI-generated image URL — download it
+        console.log("Downloading image from:", imagePayload.data);
+        imageBuffer = await downloadImage(imagePayload.data);
+      }
 
       console.log("Registering upload with LinkedIn...");
       const { uploadUrl, asset } = await registerImageUpload(accessToken, userId);
