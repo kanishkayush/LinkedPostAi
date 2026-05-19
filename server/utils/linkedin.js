@@ -53,16 +53,105 @@ async function getUserProfile(accessToken) {
 }
 
 /**
- * Post content to LinkedIn using UGC Posts API v2
+ * Register an image upload with LinkedIn
  */
-async function postToLinkedIn(accessToken, userId, postText) {
+async function registerImageUpload(accessToken, userId) {
+  const body = {
+    registerUploadRequest: {
+      recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
+      owner: `urn:li:person:${userId}`,
+      serviceRelationships: [
+        {
+          relationshipType: "OWNER",
+          identifier: "urn:li:userGeneratedContent",
+        },
+      ],
+    },
+  };
+
+  const response = await axios.post(
+    "https://api.linkedin.com/v2/assets?action=registerUpload",
+    body,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const uploadUrl =
+    response.data.value.uploadMechanism[
+      "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"
+    ].uploadUrl;
+  const asset = response.data.value.asset;
+
+  return { uploadUrl, asset };
+}
+
+/**
+ * Upload image binary to LinkedIn
+ */
+async function uploadImageToLinkedIn(uploadUrl, accessToken, imageBuffer) {
+  await axios.put(uploadUrl, imageBuffer, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "image/jpeg",
+    },
+  });
+}
+
+/**
+ * Download image from URL and return as buffer
+ */
+async function downloadImage(imageUrl) {
+  const response = await axios.get(imageUrl, {
+    responseType: "arraybuffer",
+    timeout: 30000,
+  });
+  return Buffer.from(response.data);
+}
+
+/**
+ * Post content to LinkedIn (text only or with image)
+ */
+async function postToLinkedIn(accessToken, userId, postText, imageUrl) {
+  // If there's an image URL, upload it to LinkedIn first
+  let mediaAsset = null;
+  if (imageUrl) {
+    try {
+      console.log("Downloading image from:", imageUrl);
+      const imageBuffer = await downloadImage(imageUrl);
+
+      console.log("Registering upload with LinkedIn...");
+      const { uploadUrl, asset } = await registerImageUpload(accessToken, userId);
+
+      console.log("Uploading image to LinkedIn...");
+      await uploadImageToLinkedIn(uploadUrl, accessToken, imageBuffer);
+
+      mediaAsset = asset;
+      console.log("Image uploaded successfully:", asset);
+    } catch (err) {
+      console.error("Image upload failed, posting text only:", err.message);
+      // Fall back to text-only post
+    }
+  }
+
   const body = {
     author: `urn:li:person:${userId}`,
     lifecycleState: "PUBLISHED",
     specificContent: {
       "com.linkedin.ugc.ShareContent": {
         shareCommentary: { text: postText },
-        shareMediaCategory: "NONE",
+        shareMediaCategory: mediaAsset ? "IMAGE" : "NONE",
+        ...(mediaAsset && {
+          media: [
+            {
+              status: "READY",
+              media: mediaAsset,
+            },
+          ],
+        }),
       },
     },
     visibility: {

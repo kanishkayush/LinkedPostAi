@@ -42,10 +42,10 @@ export async function suggestHashtags({ postText }) {
   });
 }
 
-export async function postToLinkedIn({ postText, accessToken, userId }) {
+export async function postToLinkedIn({ postText, accessToken, userId, imageUrl }) {
   return apiCall('/api/post-to-linkedin', {
     method: 'POST',
-    body: JSON.stringify({ postText, accessToken, userId }),
+    body: JSON.stringify({ postText, accessToken, userId, imageUrl }),
   });
 }
 

@@ -15,7 +15,9 @@ export default function PostEditor({
   const [hashtags, setHashtags] = useState([]);
   const [isLoadingHashtags, setIsLoadingHashtags] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
+  const [originalImageUrl, setOriginalImageUrl] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handleSuggestHashtags = async () => {
     setIsLoadingHashtags(true);
@@ -36,15 +38,26 @@ export default function PostEditor({
 
   const handleGenerateImage = async () => {
     setIsGeneratingImage(true);
+    setImageError(false);
     try {
       const data = await generateImage({ postText });
-      setImageUrl(data.imageUrl);
-      toastSuccess('Image generated! It may take a few seconds to render.');
+      // Use the proxy URL to serve the image through our backend (avoids CORS)
+      const apiBase = import.meta.env.VITE_API_URL || '';
+      const proxyUrl = `${apiBase}/api/proxy-image?url=${encodeURIComponent(data.imageUrl)}`;
+      setOriginalImageUrl(data.imageUrl);
+      setImageUrl(proxyUrl);
+      toastSuccess('Image generating! Takes 5-10 seconds to render...');
     } catch (err) {
       toastError?.(err.message || 'Failed to generate image');
     } finally {
       setIsGeneratingImage(false);
     }
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl(null);
+    setOriginalImageUrl(null);
+    setImageError(false);
   };
 
   if (!postText) return null;
@@ -67,7 +80,18 @@ export default function PostEditor({
 
       <PostPreview postText={postText} isEditing={isEditing}
         onEdit={() => setIsEditing(true)} onTextChange={onTextChange}
-        imageUrl={imageUrl} onRemoveImage={() => setImageUrl(null)} />
+        imageUrl={imageUrl} onRemoveImage={handleRemoveImage}
+        onImageError={() => setImageError(true)} />
+
+      {imageError && imageUrl && (
+        <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+          <span>⚠️</span>
+          <span className="text-amber-700">Image is still generating. Click to retry:</span>
+          <button onClick={handleGenerateImage} className="text-linkedin-blue font-semibold hover:underline">
+            Regenerate
+          </button>
+        </div>
+      )}
 
       <CharCounter count={postText.length} />
 
@@ -79,11 +103,10 @@ export default function PostEditor({
             {isRefining ? <LoadingSpinner size="sm" /> : label}
           </button>
         ))}
-        {/* Generate Image Button */}
         <button onClick={handleGenerateImage}
           disabled={isGeneratingImage}
           className="btn-secondary text-xs py-2 px-3 disabled:opacity-50 border-purple-400 text-purple-600 hover:bg-purple-500 hover:text-white hover:border-purple-500">
-          {isGeneratingImage ? <><LoadingSpinner size="sm" /> Generating...</> : '🖼️ Generate Image'}
+          {isGeneratingImage ? <><LoadingSpinner size="sm" /> Generating...</> : imageUrl ? '🖼️ New Image' : '🖼️ Generate Image'}
         </button>
       </div>
 
@@ -96,7 +119,7 @@ export default function PostEditor({
           <button onClick={handleCopy} className="btn-ghost text-xs">📋 Copy</button>
           <button onClick={onSaveDraft} className="btn-ghost text-xs">💾 Draft</button>
         </div>
-        <button onClick={onPublish} disabled={!isConnected || isPublishing || !postText}
+        <button onClick={() => onPublish(originalImageUrl)} disabled={!isConnected || isPublishing || !postText}
           className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
           title={!isConnected ? 'Connect LinkedIn first' : 'Post to LinkedIn'}>
           {isPublishing ? (<><LoadingSpinner size="sm" /> Publishing...</>) : '🔗 Post to LinkedIn'}

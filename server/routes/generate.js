@@ -78,14 +78,39 @@ router.post("/generate-image", async (req, res) => {
     // Use Groq to generate an optimized image prompt
     const imagePrompt = await generateImagePrompt({ postText });
 
-    // Build Pollinations.ai URL (free, no API key needed)
+    // Build Pollinations.ai URL with a unique seed
+    const seed = Date.now();
     const encodedPrompt = encodeURIComponent(imagePrompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=627&nologo=true`;
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1200&height=627&nologo=true&seed=${seed}`;
 
     res.json({ imageUrl, imagePrompt });
   } catch (error) {
     console.error("Image generation error:", error.message);
     res.status(500).json({ error: "Failed to generate image." });
+  }
+});
+
+/**
+ * GET /api/proxy-image
+ * Proxy an image URL to avoid CORS issues and serve directly
+ */
+router.get("/proxy-image", async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: "URL required" });
+
+    const axios = require("axios");
+    const response = await axios.get(url, {
+      responseType: "arraybuffer",
+      timeout: 30000,
+    });
+
+    res.set("Content-Type", response.headers["content-type"] || "image/jpeg");
+    res.set("Cache-Control", "public, max-age=86400");
+    res.send(Buffer.from(response.data));
+  } catch (error) {
+    console.error("Image proxy error:", error.message);
+    res.status(500).json({ error: "Failed to proxy image" });
   }
 });
 

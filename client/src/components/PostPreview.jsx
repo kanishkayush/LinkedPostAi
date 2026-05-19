@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { PROFILE } from '../utils/constants';
 
-export default function PostPreview({ postText, isEditing, onEdit, onTextChange, imageUrl, onRemoveImage }) {
+export default function PostPreview({ postText, isEditing, onEdit, onTextChange, imageUrl, onRemoveImage, onImageError }) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   return (
     <div className="linkedin-post-card animate-slide-up">
@@ -74,17 +75,24 @@ export default function PostPreview({ postText, isEditing, onEdit, onTextChange,
       {/* Post Image */}
       {imageUrl && (
         <div className="relative group">
-          {!imageLoaded && (
-            <div className="w-full h-[314px] shimmer-bg flex items-center justify-center">
+          {!imageLoaded && !imageFailed && (
+            <div className="w-full h-[314px] shimmer-bg flex flex-col items-center justify-center gap-2">
+              <div className="w-8 h-8 rounded-full border-[3px] border-linkedin-border border-t-linkedin-blue animate-spin" />
               <span className="text-linkedin-text-secondary text-sm">Generating image...</span>
+            </div>
+          )}
+          {imageFailed && (
+            <div className="w-full h-[200px] bg-gray-100 flex flex-col items-center justify-center gap-2 rounded">
+              <span className="text-3xl">🖼️</span>
+              <span className="text-linkedin-text-secondary text-sm">Image failed to load</span>
             </div>
           )}
           <img
             src={imageUrl}
             alt="AI generated post image"
-            className={`w-full object-cover max-h-[400px] ${imageLoaded ? '' : 'hidden'}`}
-            onLoad={() => setImageLoaded(true)}
-            onError={() => setImageLoaded(true)}
+            className={`w-full object-cover max-h-[400px] ${imageLoaded && !imageFailed ? '' : 'hidden'}`}
+            onLoad={() => { setImageLoaded(true); setImageFailed(false); }}
+            onError={() => { setImageLoaded(true); setImageFailed(true); onImageError?.(); }}
           />
           {onRemoveImage && (
             <button

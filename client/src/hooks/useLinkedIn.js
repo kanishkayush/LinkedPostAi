@@ -56,13 +56,14 @@ export function useLinkedIn() {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  const publishPost = useCallback(async (postText) => {
+  const publishPost = useCallback(async (postText, imageUrl) => {
     if (!auth) throw new Error('Not connected to LinkedIn');
     
     const result = await apiPostToLinkedIn({
       postText,
       accessToken: auth.accessToken,
       userId: auth.userId,
+      imageUrl,
     });
 
     return result;

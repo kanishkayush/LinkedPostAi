@@ -43,11 +43,11 @@ export default function App() {
     }
   };
 
-  const handlePublish = async () => {
+  const handlePublish = async (imageUrl) => {
     if (!postText || !isConnected) return;
     setIsPublishing(true);
     try {
-      const result = await publishPost(postText);
+      const result = await publishPost(postText, imageUrl);
       addToHistory({
         content: postText,
         status: 'posted',

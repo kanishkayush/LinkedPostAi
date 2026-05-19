@@ -9,7 +9,7 @@ const router = express.Router();
  */
 router.post("/post-to-linkedin", async (req, res) => {
   try {
-    const { postText, accessToken, userId } = req.body;
+    const { postText, accessToken, userId, imageUrl } = req.body;
 
     if (!postText || !accessToken || !userId) {
       return res.status(400).json({
@@ -17,7 +17,7 @@ router.post("/post-to-linkedin", async (req, res) => {
       });
     }
 
-    const result = await postToLinkedIn(accessToken, userId, postText);
+    const result = await postToLinkedIn(accessToken, userId, postText, imageUrl);
     res.json({ success: true, postId: result.id, data: result });
   } catch (error) {
     console.error(
